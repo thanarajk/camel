@@ -41,6 +41,7 @@ import org.apache.camel.model.dataformat.JaxbDataFormat;
 import org.apache.camel.model.dataformat.JibxDataFormat;
 import org.apache.camel.model.dataformat.JsonDataFormat;
 import org.apache.camel.model.dataformat.JsonLibrary;
+import org.apache.camel.model.dataformat.LZFDataFormat;
 import org.apache.camel.model.dataformat.MimeMultipartDataFormat;
 import org.apache.camel.model.dataformat.PGPDataFormat;
 import org.apache.camel.model.dataformat.ProtobufDataFormat;
@@ -273,6 +274,14 @@ public class DataFormatClause<T extends ProcessorDefinition<?>> {
     }
 
     /**
+     * Uses the LZF deflater data format
+     */
+    public T lzf() {
+        LZFDataFormat lzfdf = new LZFDataFormat();
+        return dataFormat(lzfdf);
+    }
+
+    /**
      * Uses the MIME Multipart data format
      */
     public T mimeMultipart() {
@@ -308,6 +317,30 @@ public class DataFormatClause<T extends ProcessorDefinition<?>> {
         mm.setMultipartSubType(multipartSubType);
         mm.setMultipartWithoutAttachment(multipartWithoutAttachment);
         mm.setHeadersInline(headersInline);
+        mm.setBinaryContent(binaryContent);
+        return dataFormat(mm);
+    }
+
+    /**
+     * Uses the MIME Multipart data format
+     *
+     * @param multipartSubType           the subtype of the MIME Multipart
+     * @param multipartWithoutAttachment defines whether a message without attachment is also marshaled
+     *                                   into a MIME Multipart (with only one body part).
+     * @param headersInline              define the MIME Multipart headers as part of the message body
+     *                                   or as Camel headers
+     * @param includeHeadeers            if headersInline is set to true all camel headers matching this
+     *                                   regex are also stored as MIME headers on the Multipart
+     * @param binaryContent              have binary encoding for binary content (true) or use Base-64
+     *                                   encoding for binary content (false)
+     */
+    public T mimeMultipart(String multipartSubType, boolean multipartWithoutAttachment, boolean headersInline,
+                           String includeHeaders, boolean binaryContent) {
+        MimeMultipartDataFormat mm = new MimeMultipartDataFormat();
+        mm.setMultipartSubType(multipartSubType);
+        mm.setMultipartWithoutAttachment(multipartWithoutAttachment);
+        mm.setHeadersInline(headersInline);
+        mm.setIncludeHeaders(includeHeaders);
         mm.setBinaryContent(binaryContent);
         return dataFormat(mm);
     }

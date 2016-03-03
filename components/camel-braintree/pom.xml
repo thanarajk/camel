@@ -50,9 +50,9 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.servicemix.bundles</groupId>
-      <artifactId>org.apache.servicemix.bundles.braintree-java</artifactId>
-      <version>${braintree-gateway-bundle-version}</version>
+      <groupId>com.braintreepayments.gateway</groupId>
+      <artifactId>braintree-java</artifactId>
+      <version>${braintree-gateway-version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
@@ -80,6 +80,7 @@
       <version>${braintree-gateway-version}</version>
       <classifier>javadoc</classifier>
       <scope>provided</scope>
+      <optional>true</optional>
     </dependency>
 
     <!-- logging -->

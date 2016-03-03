@@ -1326,11 +1326,18 @@ public class DefaultCamelCatalog implements CamelCatalog {
             options.add(s);
         }
 
+        // need to preserve {{ and }} from the syntax
+        // (we need to use words only as its provisional placeholders)
+        syntax = syntax.replaceAll("\\{\\{", "BEGINCAMELPLACEHOLDER");
+        syntax = syntax.replaceAll("\\}\\}", "ENDCAMELPLACEHOLDER");
+
         // parse the syntax into each options
         Matcher matcher2 = SYNTAX_PATTERN.matcher(syntax);
         List<String> options2 = new ArrayList<String>();
         while (matcher2.find()) {
             String s = matcher2.group(1);
+            s = s.replaceAll("BEGINCAMELPLACEHOLDER", "\\{\\{");
+            s = s.replaceAll("ENDCAMELPLACEHOLDER", "\\}\\}");
             options2.add(s);
         }
 
@@ -1440,23 +1447,22 @@ public class DefaultCamelCatalog implements CamelCatalog {
      */
     private Map<String, String> filterProperties(String scheme, Map<String, String> options) {
         if ("log".equals(scheme)) {
-            Map<String, String> answer = new LinkedHashMap<String, String>();
             String showAll = options.get("showAll");
             if ("true".equals(showAll)) {
+                Map<String, String> filtered = new LinkedHashMap<String, String>();
                 // remove all the other showXXX options when showAll=true
                 for (Map.Entry<String, String> entry : options.entrySet()) {
                     String key = entry.getKey();
                     boolean skip = key.startsWith("show") && !key.equals("showAll");
                     if (!skip) {
-                        answer.put(key, entry.getValue());
+                        filtered.put(key, entry.getValue());
                     }
                 }
+                return filtered;
             }
-            return answer;
-        } else {
-            // use as-is
-            return options;
         }
+        // use as-is
+        return options;
     }
 
     @Override

@@ -32,7 +32,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-
 import javax.xml.transform.dom.DOMSource;
 
 import org.apache.camel.Exchange;
@@ -60,10 +59,12 @@ import org.restlet.data.Status;
 import org.restlet.engine.application.DecodeRepresentation;
 import org.restlet.engine.header.HeaderConstants;
 import org.restlet.representation.ByteArrayRepresentation;
+import org.restlet.representation.EmptyRepresentation;
 import org.restlet.representation.FileRepresentation;
 import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.representation.StreamRepresentation;
+import org.restlet.representation.StringRepresentation;
 import org.restlet.util.Series;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -150,17 +151,24 @@ public class DefaultRestletBinding implements RestletBinding, HeaderFilterStrate
 
     public void populateRestletRequestFromExchange(Request request, Exchange exchange) {
         request.setReferrerRef("camel-restlet");
-        String body = exchange.getIn().getBody(String.class);
-        Form form = new Form();
-        // add the body as the key in the form with null value
-        form.add(body, null);
+
+        final Method method = request.getMethod();
 
         MediaType mediaType = exchange.getIn().getHeader(Exchange.CONTENT_TYPE, MediaType.class);
         if (mediaType == null) {
             mediaType = MediaType.APPLICATION_WWW_FORM;
         }
 
-        LOG.debug("Populate Restlet request from exchange body: {} using media type {}", body, mediaType);
+        Form form = null;
+        // Use forms only for PUT, POST and x-www-form-urlencoded
+        if ((Method.PUT == method || Method.POST == method) && mediaType == MediaType.APPLICATION_WWW_FORM) {
+            form = new Form();
+            // must use string based for forms
+            String body = exchange.getIn().getBody(String.class);
+            if (body != null) {
+                form.add(body, null);
+            }
+        }
 
         // login and password are filtered by header filter strategy
         String login = exchange.getIn().getHeader(RestletConstants.RESTLET_LOGIN, String.class);
@@ -176,8 +184,8 @@ public class DefaultRestletBinding implements RestletBinding, HeaderFilterStrate
             String key = entry.getKey();
             Object value = entry.getValue();
             if (!headerFilterStrategy.applyFilterToCamelHeaders(key, value, exchange)) {
-                // Use forms only for GET and POST/x-www-form-urlencoded
-                if (request.getMethod() == Method.GET || (request.getMethod() == Method.POST && mediaType == MediaType.APPLICATION_WWW_FORM)) {
+                // Use forms only for PUT, POST and x-www-form-urlencoded
+                if (form != null) {
                     if (key.startsWith("org.restlet.")) {
                         // put the org.restlet headers in attributes
                         request.getAttributes().put(key, value);
@@ -199,19 +207,30 @@ public class DefaultRestletBinding implements RestletBinding, HeaderFilterStrate
             }
         }
 
-        LOG.debug("Using Content Type: {} for POST data: {}", mediaType, body);
-
-        // Only URL Encode for GET and form POST
-        if (request.getMethod() == Method.GET || (request.getMethod() == Method.POST && mediaType == MediaType.APPLICATION_WWW_FORM)) {
+        if (form != null) {
             request.setEntity(form.getWebRepresentation());
+            LOG.debug("Populate Restlet {} request from exchange body as form using media type {}", method, mediaType);
         } else {
-            if (body == null) {
-                request.setEntity(null);
+            // include body if PUT or POST
+            if (request.getMethod() == Method.PUT || request.getMethod() == Method.POST) {
+                Representation body = createRepresentationFromBody(exchange, mediaType);
+                request.setEntity(body);
+                LOG.debug("Populate Restlet {} request from exchange body: {} using media type {}", method, body, mediaType);
             } else {
-                request.setEntity(body, mediaType);
+                // no body
+                LOG.debug("Populate Restlet {} request from exchange using media type {}", method, mediaType);
+                request.setEntity(new EmptyRepresentation());
             }
         }
 
+        // accept
+        String accept = exchange.getIn().getHeader("Accept", String.class);
+        if (accept != null) {
+            MediaType acceptedMediaType = exchange.getContext().getTypeConverter().tryConvertTo(MediaType.class, exchange, accept);
+            if (acceptedMediaType != null) {
+                request.getClientInfo().getAcceptedMediaTypes().add(new Preference<MediaType>(acceptedMediaType));
+            }
+        }
         MediaType acceptedMediaType = exchange.getIn().getHeader(Exchange.ACCEPT_CONTENT_TYPE, MediaType.class);
         if (acceptedMediaType != null) {
             request.getClientInfo().getAcceptedMediaTypes().add(new Preference<MediaType>(acceptedMediaType));
@@ -376,10 +395,10 @@ public class DefaultRestletBinding implements RestletBinding, HeaderFilterStrate
         // special for certain headers
         if (message.getEntity() != null) {
             // arfg darn restlet you make using your api harder for end users with all this trick just to set those ACL headers
-            if (header.equalsIgnoreCase(HeaderConstants.HEADER_ACCESS_CONTROL_ALLOW_CREDENTIAL)) {
+            if (header.equalsIgnoreCase(HeaderConstants.HEADER_ACCESS_CONTROL_ALLOW_CREDENTIALS)) {
                 Boolean bool = exchange.getContext().getTypeConverter().tryConvertTo(Boolean.class, value);
                 if (bool != null) {
-                    message.setAccessControlAllowCredential(bool);
+                    message.setAccessControlAllowCredentials(bool);
                 }
                 return true;
             }
@@ -414,6 +433,13 @@ public class DefaultRestletBinding implements RestletBinding, HeaderFilterStrate
                     // set the cache control value directive
                     list.add(new CacheDirective((String) value));
                     message.setCacheDirectives(list);
+                }
+                return true;
+            }
+            if (header.equalsIgnoreCase(HeaderConstants.HEADER_LOCATION)) {
+                String text = exchange.getContext().getTypeConverter().tryConvertTo(String.class, value);
+                if (text != null) {
+                    message.setLocationRef(text);
                 }
                 return true;
             }
@@ -519,6 +545,36 @@ public class DefaultRestletBinding implements RestletBinding, HeaderFilterStrate
             }
         }
         return set;
+    }
+
+    protected Representation createRepresentationFromBody(Exchange exchange, MediaType mediaType) {
+        Object body = exchange.getIn().getBody();
+        if (body == null) {
+            return new EmptyRepresentation();
+        }
+
+        // unwrap file
+        if (body instanceof WrappedFile) {
+            body = ((WrappedFile) body).getFile();
+        }
+
+        if (body instanceof InputStream) {
+            return new InputRepresentation((InputStream) body, mediaType);
+        } else if (body instanceof File) {
+            return new FileRepresentation((File) body, mediaType);
+        } else if (body instanceof byte[]) {
+            return new ByteArrayRepresentation((byte[]) body, mediaType);
+        } else if (body instanceof String) {
+            return new StringRepresentation((CharSequence) body, mediaType);
+        }
+
+        // fallback as string
+        body = exchange.getIn().getBody(String.class);
+        if (body != null) {
+            return new StringRepresentation((CharSequence) body, mediaType);
+        } else {
+            return new EmptyRepresentation();
+        }
     }
 
     public HeaderFilterStrategy getHeaderFilterStrategy() {

@@ -7,12 +7,12 @@ Metrics Component
 The **metrics:** component allows to collect various metrics directly
 from Camel routes. Supported metric types
 are link:#MetricsComponent-counter[counter], link:#MetricsComponent-histogram[histogram],
-link:#MetricsComponent-meter[meter] and link:#MetricsComponent-timer[timer]. http://metrics.codahale.com/[Metrics] provides
+link:#MetricsComponent-meter[meter] and link:#MetricsComponent-timer[timer]. http://metrics.dropwizard.io[Metrics] provides
 simple way to measure behaviour of application. Configurable
 reporting backend is enabling different integration options for
 collecting and visualizing statistics. The component also provides
 a `MetricsRoutePolicyFactory` which allows to expose route statistics
-using codehale metrics, see bottom of page for details.
+using Dropwizard Metrics, see bottom of page for details.
 
 Maven users will need to add the following dependency to their `pom.xml`
 for this component:
@@ -40,10 +40,13 @@ metrics:[ meter | counter | histogram | timer ]:metricname[?options]
 [[MetricsComponent-registry]]Metric Registry
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Camel Metrics Component uses by default `MetricRegistry` with
-`Slf4jReporter` and 60 second reporting interval. Default registry can
-be replaced with custom one by providing bean with name `metricRegistry`
-in Camel registry. For example using Spring Java Configuration.
+Camel Metrics component uses by default a `MetricRegistry` instance with
+a `Slf4jReporter` that has a 60 second reporting interval.
+This default registry can be replaced with a custom one by providing
+a `MetricRegistry` bean. If multiple `MetricRegistry` beans exist in the
+application, the one with name `metricRegistry` is used.
+
+For example using Spring Java Configuration:
 
 [source,java]
 ----
@@ -69,8 +72,31 @@ public static class MyConfig extends SingleRouteCamelConfiguration {
 }
 ----
 
+Or using CDI:
+[source,java]
+----
+class MyBean extends RouteBuilder {
+
+    @Override
+    public void configure() {
+      from("...")
+          // Register the 'my-meter' meter in the MetricRegistry below
+          .to("metrics:meter:my-meter");
+    }
+
+    @Produces
+    // If multiple MetricRegistry beans
+    // @Named(MetricsComponent.METRIC_REGISTRY_NAME)
+    MetricRegistry registry() {
+        MetricRegistry registry = new MetricRegistry();
+        // ...
+        return registry;
+    }
+}
+----
+
 CAUTION: `MetricRegistry` uses internal thread(s) for reporting. There is no
-public API in version 3.0.1 for users to clean up on exit. Thus using
+public API in version `3.0.1` for users to clean up on exit. Thus using
 Camel Metrics Component leads to Java classloader leak and my cause
 `OutOfMemoryErrors` in some cases.
 
@@ -374,7 +400,7 @@ MetricsRoutePolicyFactory
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This factory allows to add a link:routepolicy.html[RoutePolicy] for each
-route which exposes route utilization statistics using codehale metrics.
+route which exposes route utilization statistics using Dropwizard metrics.
 This factory can be used in Java and XML as the examples below
 demonstrates. 
 
@@ -526,3 +552,10 @@ String json = service.dumpStatisticsAsJson();
 
 And the JMX API the MBean is registered in the `type=services` tree
 with `name=MetricsMessageHistoryService`.
+
+[[MetricsComponent-SeeAlso]]
+See Also
+^^^^^^^^
+
+* The `camel-example-cdi-metrics` example that illustrates the integration
+  between Camel, Metrics and CDI.

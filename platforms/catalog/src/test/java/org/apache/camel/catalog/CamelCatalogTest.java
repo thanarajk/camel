@@ -343,6 +343,28 @@ public class CamelCatalogTest {
     }
 
     @Test
+    public void testAsEndpointUriLogShort() throws Exception {
+        Map<String, String> map = new HashMap<String, String>();
+        map.put("loggerName", "foo");
+        map.put("loggerLevel", "DEBUG");
+
+        assertEquals("log:foo?loggerLevel=DEBUG", catalog.asEndpointUri("log", map, false));
+    }
+
+    @Test
+    public void testAsEndpointUriWithplaceholder() throws Exception {
+        Map<String, String> map = new HashMap<String, String>();
+        map.put("query", "{{insert}}");
+        assertEquals("sql:{{insert}}", catalog.asEndpointUri("sql", map, false));
+
+        map.put("useMessageBodyForSql", "true");
+        assertEquals("sql:{{insert}}?useMessageBodyForSql=true", catalog.asEndpointUri("sql", map, false));
+
+        map.put("parametersCount", "{{count}}");
+        assertEquals("sql:{{insert}}?parametersCount={{count}}&useMessageBodyForSql=true", catalog.asEndpointUri("sql", map, false));
+    }
+
+    @Test
     public void testEndpointPropertiesJms() throws Exception {
         Map<String, String> map = catalog.endpointProperties("jms:queue:foo");
         assertNotNull(map);

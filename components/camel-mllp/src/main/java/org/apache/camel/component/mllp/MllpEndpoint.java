@@ -22,6 +22,7 @@ import org.apache.camel.ExchangePattern;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
 import org.apache.camel.impl.DefaultEndpoint;
+import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriPath;
@@ -47,17 +48,20 @@ public class MllpEndpoint extends DefaultEndpoint {
 
     private static final Logger LOG = LoggerFactory.getLogger(MllpEndpoint.class);
 
-    @UriPath(defaultValue = "0.0.0.0")
-    String hostname = "0.0.0.0";
+    @UriPath @Metadata(required = "true")
+    String hostname;
 
-    @UriPath(description = "TCP Port for connection")
+    @UriPath @Metadata(required = "true")
     int port = -1;
 
     @UriParam(defaultValue = "5")
     int backlog = 5;
 
-    @UriParam(defaultValue = "30000", description = "TCP Server only - timeout value while waiting for a TCP listener to start (milliseconds)")
+    @UriParam(defaultValue = "30000")
     int bindTimeout = 30000;
+
+    @UriParam(defaultValue = "5000")
+    int bindRetryInterval = 5000;
 
     @UriParam(defaultValue = "60000")
     int acceptTimeout = 60000;
@@ -74,22 +78,19 @@ public class MllpEndpoint extends DefaultEndpoint {
     @UriParam(defaultValue = "true")
     boolean tcpNoDelay = true;
 
-    @UriParam(defaultValue = "false")
+    @UriParam
     boolean reuseAddress;
 
-    @UriParam(defaultValue = "System Default")
+    @UriParam
     Integer receiveBufferSize;
 
-    @UriParam(defaultValue = "System Default")
+    @UriParam
     Integer sendBufferSize;
-
-    @UriParam(description = "The TCP mode of the endpoint (client or server).  Defaults to client for Producers and server for Consumers")
-    String tcpMode;
 
     @UriParam(defaultValue = "true")
     boolean autoAck = true;
 
-    @UriParam(defaultValue = "System Default")
+    @UriParam
     String charsetName;
 
     public MllpEndpoint(String uri, MllpComponent component) {
@@ -149,7 +150,7 @@ public class MllpEndpoint extends DefaultEndpoint {
     /**
      * Set the CamelCharsetName property on the exchange
      *
-     * @param charsetName
+     * @param charsetName the charset
      */
     public void setCharsetName(String charsetName) {
         this.charsetName = charsetName;
@@ -160,7 +161,9 @@ public class MllpEndpoint extends DefaultEndpoint {
     }
 
     /**
-     * Hostname or IP for connection for the TCP connection
+     * Hostname or IP for connection for the TCP connection.
+     *
+     * The default value is null, which means any local IP address
      *
      * @param hostname Hostname or IP
      */
@@ -191,6 +194,28 @@ public class MllpEndpoint extends DefaultEndpoint {
      */
     public void setBacklog(int backlog) {
         this.backlog = backlog;
+    }
+
+    public int getBindTimeout() {
+        return bindTimeout;
+    }
+
+    /**
+     * TCP Server Only - The number of milliseconds to retry binding to a server port
+     */
+    public void setBindTimeout(int bindTimeout) {
+        this.bindTimeout = bindTimeout;
+    }
+
+    public int getBindRetryInterval() {
+        return bindRetryInterval;
+    }
+
+    /**
+     * TCP Server Only - The number of milliseconds to wait between bind attempts
+     */
+    public void setBindRetryInterval(int bindRetryInterval) {
+        this.bindRetryInterval = bindRetryInterval;
     }
 
     public int getAcceptTimeout() {

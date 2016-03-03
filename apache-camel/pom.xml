@@ -221,6 +221,10 @@
     </dependency>
     <dependency>
       <groupId>org.apache.camel</groupId>
+      <artifactId>camel-etcd</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.camel</groupId>
       <artifactId>camel-eventadmin</artifactId>
     </dependency>
     <dependency>
@@ -361,6 +365,10 @@
     </dependency>
     <dependency>
       <groupId>org.apache.camel</groupId>
+      <artifactId>camel-ironmq</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.camel</groupId>
       <artifactId>camel-jackson</artifactId>
     </dependency>
     <dependency>
@@ -382,6 +390,10 @@
     <dependency>
       <groupId>org.apache.camel</groupId>
       <artifactId>camel-jbpm</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-jcache</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.camel</groupId>
@@ -513,6 +525,10 @@
     <dependency>
       <groupId>org.apache.camel</groupId>
       <artifactId>camel-linkedin</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-lzf</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.camel</groupId>

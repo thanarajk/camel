@@ -43,10 +43,12 @@ import org.apache.camel.spi.RestApiConsumerFactory;
 import org.apache.camel.spi.RestConfiguration;
 import org.apache.camel.spi.RestConsumerFactory;
 import org.apache.camel.util.FileUtil;
+import org.apache.camel.util.HostUtils;
 import org.apache.camel.util.IntrospectionSupport;
 import org.apache.camel.util.ObjectHelper;
 import org.apache.camel.util.URISupport;
 import org.apache.camel.util.UnsafeUriCharactersEncoder;
+import org.apache.camel.util.jsse.SSLContextParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,6 +60,7 @@ public class UndertowComponent extends UriEndpointComponent implements RestConsu
 
     private UndertowHttpBinding undertowHttpBinding = new DefaultUndertowHttpBinding();
     private final Map<Integer, UndertowRegistry> serversRegistry = new HashMap<Integer, UndertowRegistry>();
+    private SSLContextParameters sslContextParameters;
 
     public UndertowComponent() {
         super(UndertowEndpoint.class);
@@ -73,14 +76,10 @@ public class UndertowComponent extends UriEndpointComponent implements RestConsu
 
         // create the endpoint first
         UndertowEndpoint endpoint = createEndpointInstance(endpointUri, this);
-
-        UndertowHttpBinding binding = resolveAndRemoveReferenceParameter(parameters, "undertowHttpBinding", UndertowHttpBinding.class);
-        if (binding != null) {
-            endpoint.setUndertowHttpBinding(binding);
-        } else {
-            endpoint.setUndertowHttpBinding(undertowHttpBinding);
-        }
-
+        // set options from component
+        endpoint.setSslContextParameters(sslContextParameters);
+        endpoint.setUndertowHttpBinding(undertowHttpBinding);
+        // set options from parameters
         setProperties(endpoint, parameters);
         if (options != null) {
             endpoint.setOptions(options);
@@ -131,7 +130,7 @@ public class UndertowComponent extends UriEndpointComponent implements RestConsu
         }
         path = FileUtil.stripLeadingSeparator(path);
         String scheme = "http";
-        String host = "localhost";
+        String host = "";
         int port = 0;
 
         RestConfiguration config = configuration;
@@ -156,6 +155,17 @@ public class UndertowComponent extends UriEndpointComponent implements RestConsu
             contextPath = FileUtil.stripLeadingSeparator(contextPath);
             if (ObjectHelper.isNotEmpty(contextPath)) {
                 path = contextPath + "/" + path;
+            }
+        }
+
+        // if no explicit hostname set then resolve the hostname
+        if (ObjectHelper.isEmpty(host)) {
+            if (config.getRestHostNameResolver() == RestConfiguration.RestHostNameResolver.allLocalIp) {
+                host = "0.0.0.0";
+            } else if (config.getRestHostNameResolver() == RestConfiguration.RestHostNameResolver.localHostName) {
+                host = HostUtils.getLocalHostName();
+            } else if (config.getRestHostNameResolver() == RestConfiguration.RestHostNameResolver.localIp) {
+                host = HostUtils.getLocalIp();
             }
         }
 
@@ -188,7 +198,17 @@ public class UndertowComponent extends UriEndpointComponent implements RestConsu
         UndertowEndpoint endpoint = camelContext.getEndpoint(url, UndertowEndpoint.class);
         setProperties(endpoint, parameters);
 
+        if (!map.containsKey("undertowHttpBinding")) {
+            // use the rest binding, if not using a custom http binding
+            endpoint.setUndertowHttpBinding(new RestUndertowHttpBinding());
+        }
+
+        // configure consumer properties
         Consumer consumer = endpoint.createConsumer(processor);
+        if (config.getConsumerProperties() != null && !config.getConsumerProperties().isEmpty()) {
+            setProperties(consumer, config.getConsumerProperties());
+        }
+
         return consumer;
     }
 
@@ -301,5 +321,17 @@ public class UndertowComponent extends UriEndpointComponent implements RestConsu
     public void setUndertowHttpBinding(UndertowHttpBinding undertowHttpBinding) {
         this.undertowHttpBinding = undertowHttpBinding;
     }
+
+    public SSLContextParameters getSslContextParameters() {
+        return sslContextParameters;
+    }
+
+    /**
+     * To configure security using SSLContextParameters
+     */
+    public void setSslContextParameters(SSLContextParameters sslContextParameters) {
+        this.sslContextParameters = sslContextParameters;
+    }
+
 
 }

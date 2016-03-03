@@ -16,6 +16,8 @@
  */
 package org.apache.camel.component.kubernetes;
 
+import java.util.concurrent.ExecutorService;
+
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
@@ -163,6 +165,10 @@ public class KubernetesEndpoint extends DefaultEndpoint {
     protected void doStop() throws Exception {
         super.doStop();
         client.close();
+    }
+    
+    public ExecutorService createExecutor() {
+        return getCamelContext().getExecutorServiceManager().newFixedThreadPool(this, "KubernetesConsumer", configuration.getPoolSize());
     }
 
     public DefaultKubernetesClient getKubernetesClient() {

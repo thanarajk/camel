@@ -16,8 +16,6 @@
  */
 package org.apache.camel.component.validator;
 
-import java.io.IOException;
-import java.io.InputStream;
 import javax.xml.XMLConstants;
 import javax.xml.validation.SchemaFactory;
 
@@ -29,7 +27,6 @@ import org.apache.camel.Processor;
 import org.apache.camel.Producer;
 import org.apache.camel.api.management.ManagedOperation;
 import org.apache.camel.api.management.ManagedResource;
-import org.apache.camel.converter.IOConverter;
 import org.apache.camel.impl.DefaultEndpoint;
 import org.apache.camel.processor.validation.DefaultValidationErrorHandler;
 import org.apache.camel.processor.validation.SchemaReader;
@@ -39,10 +36,7 @@ import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.UriEndpoint;
 import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriPath;
-import org.apache.camel.util.IOHelper;
-import org.apache.camel.util.ResourceHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 
 /**
  * Validates the payload of a message using XML Schema and JAXP Validation.
@@ -50,8 +44,6 @@ import org.slf4j.LoggerFactory;
 @ManagedResource(description = "Managed ValidatorEndpoint")
 @UriEndpoint(scheme = "validator", title = "Validator", syntax = "validator:resourceUri", producerOnly = true, label = "core,validation")
 public class ValidatorEndpoint extends DefaultEndpoint {
-
-    private static final Logger LOG = LoggerFactory.getLogger(ValidatorEndpoint.class);
 
     @UriPath(description = "URL to a local resource on the classpath, or a reference to lookup a bean in the Registry,"
             + " or a full URL to a remote resource or resource on the file system which contains the XSD to validate against.")
@@ -69,8 +61,11 @@ public class ValidatorEndpoint extends DefaultEndpoint {
     @UriParam(defaultValue = "true", label = "advanced",
             description = "Whether the Schema instance should be shared or not. This option is introduced to work around a JDK 1.6.x bug. Xerces should not have this issue.")
     private boolean useSharedSchema = true;
-    @UriParam(label = "advanced", description = "To use a custom LSResourceResolver")
+    @UriParam(label = "advanced", description = "To use a custom LSResourceResolver.  Do not use together with resourceResolverFactory")
     private LSResourceResolver resourceResolver;
+    @UriParam(label = "advanced", description = "To use a custom LSResourceResolver which depends on a dynamic endpoint resource URI. " + //
+    "The default resource resolver factory resturns a resource resolver which can read files from the class path and file system. Do not use together with resourceResolver.")
+    private ValidatorResourceResolverFactory resourceResolverFactory;
     @UriParam(defaultValue = "true", description = "Whether to fail if no body exists.")
     private boolean failOnNullBody = true;
     @UriParam(defaultValue = "true", description = "Whether to fail if no header exists when validating against a header.")
@@ -83,25 +78,23 @@ public class ValidatorEndpoint extends DefaultEndpoint {
      * to be able to clear the cached schema in the schema reader. See method
      * {@link #clearCachedSchema}.
      */
-    private final SchemaReader schemaReader = new SchemaReader();
+    private final SchemaReader schemaReader;
     private volatile boolean schemaReaderConfigured;
 
     public ValidatorEndpoint() {
+        schemaReader = new SchemaReader();
     }
 
     public ValidatorEndpoint(String endpointUri, Component component, String resourceUri) {
         super(endpointUri, component);
         this.resourceUri = resourceUri;
+        schemaReader = new SchemaReader(getCamelContext(), resourceUri);
     }
 
     @ManagedOperation(description = "Clears the cached schema, forcing to re-load the schema on next request")
-    public void clearCachedSchema() throws Exception {
-        LOG.debug("{} rereading schema resource: {}", this, resourceUri);
-        byte[] bytes = readSchemaResource();
-        schemaReader.setSchemaAsByteArray(bytes);
-
-        schemaReader.setSchema(null); // will cause to reload the schema from
-                                      // the set byte-array on next request
+    public void clearCachedSchema() {
+        
+        schemaReader.setSchema(null); // will cause to reload the schema
     }
 
     @Override
@@ -110,16 +103,17 @@ public class ValidatorEndpoint extends DefaultEndpoint {
         if (!schemaReaderConfigured) {
             if (resourceResolver != null) {
                 schemaReader.setResourceResolver(resourceResolver);
+            } else if (resourceResolverFactory != null) {
+                resourceResolver = resourceResolverFactory.createResourceResolver(getCamelContext(), resourceUri);
+                // set the created resource resolver to the resourceResolver variable, so that it can 
+                // be accessed by the endpoint
+                schemaReader.setResourceResolver(resourceResolver);
             } else {
-                schemaReader.setResourceResolver(new DefaultLSResourceResolver(getCamelContext(), resourceUri));
+                schemaReader.setResourceResolver(new DefaultValidatorResourceResolverFactory().createResourceResolver(getCamelContext(), resourceUri));
             }
             schemaReader.setSchemaLanguage(getSchemaLanguage());
             schemaReader.setSchemaFactory(getSchemaFactory());
             
-            byte[] bytes = readSchemaResource();
-            schemaReader.setSchemaAsByteArray(bytes);
-            LOG.debug("{} using schema resource: {}", this, resourceUri);
-
             // force loading of schema at create time otherwise concurrent
             // processing could cause thread safe issues for the
             // javax.xml.validation.SchemaFactory
@@ -135,18 +129,7 @@ public class ValidatorEndpoint extends DefaultEndpoint {
         return new ValidatorProducer(this, validator);
     }
 
-    protected byte[] readSchemaResource() throws IOException {
-        InputStream is = ResourceHelper.resolveMandatoryResourceAsInputStream(getCamelContext(), resourceUri);
-        byte[] bytes = null;
-        try {
-            bytes = IOConverter.toBytes(is);
-        } finally {
-            // and make sure to close the input stream after the schema has been
-            // loaded
-            IOHelper.close(is);
-        }
-        return bytes;
-    }
+
 
     @Override
     public Consumer createConsumer(Processor processor) throws Exception {
@@ -241,10 +224,22 @@ public class ValidatorEndpoint extends DefaultEndpoint {
     }
 
     /**
-     * To use a custom LSResourceResolver
+     * To use a custom LSResourceResolver. See also {@link #setResourceResolverFactory(ValidatorResourceResolverFactory)}
      */
     public void setResourceResolver(LSResourceResolver resourceResolver) {
         this.resourceResolver = resourceResolver;
+    }
+
+    public ValidatorResourceResolverFactory getResourceResolverFactory() {
+        return resourceResolverFactory;
+    }
+
+    /** For creating a resource resolver which depends on the endpoint resource URI. 
+     * Must not be used in combination with method {@link #setResourceResolver(LSResourceResolver). 
+     * If not set then {@link DefaultValidatorResourceResolverFactory} is used 
+     */
+    public void setResourceResolverFactory(ValidatorResourceResolverFactory resourceResolverFactory) {
+        this.resourceResolverFactory = resourceResolverFactory;
     }
 
     public boolean isFailOnNullBody() {

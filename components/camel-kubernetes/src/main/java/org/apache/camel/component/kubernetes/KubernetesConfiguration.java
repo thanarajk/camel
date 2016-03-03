@@ -86,6 +86,9 @@ public class KubernetesConfiguration {
 
     @UriParam(label = "consumer")
     private String namespaceName;
+    
+    @UriParam(label = "consumer", defaultValue = "1")
+    private int poolSize = 1;
 
     /**
      * Kubernetes Master url
@@ -283,6 +286,17 @@ public class KubernetesConfiguration {
 
     public void setNamespaceName(String namespaceName) {
         this.namespaceName = namespaceName;
+    }
+    
+    /**
+     * The Consumer pool size
+     */
+    public int getPoolSize() {
+        return poolSize;
+    }
+
+    public void setPoolSize(int poolSize) {
+        this.poolSize = poolSize;
     }
 
     @Override

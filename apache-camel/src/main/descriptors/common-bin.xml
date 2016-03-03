@@ -68,6 +68,7 @@
         <include>org.apache.camel:camel-ejb</include>
         <include>org.apache.camel:camel-elasticsearch</include>
         <include>org.apache.camel:camel-elsql</include>
+        <include>org.apache.camel:camel-etcd</include>
         <include>org.apache.camel:camel-eventadmin</include>
         <include>org.apache.camel:camel-exec</include>
         <include>org.apache.camel:camel-facebook</include>
@@ -103,6 +104,7 @@
         <include>org.apache.camel:camel-infinispan</include>
         <include>org.apache.camel:camel-ignite</include>
         <include>org.apache.camel:camel-irc</include>
+        <include>org.apache.camel:camel-ironmq</include>
         <include>org.apache.camel:camel-jackson</include>
         <include>org.apache.camel:camel-jacksonxml</include>
         <include>org.apache.camel:camel-jasypt</include>
@@ -110,6 +112,7 @@
         <include>org.apache.camel:camel-jaxb</include>
         <include>org.apache.camel:camel-jbpm</include>
         <include>org.apache.camel:camel-jcr</include>
+        <include>org.apache.camel:camel-jcache</include>
         <include>org.apache.camel:camel-jclouds</include>
         <include>org.apache.camel:camel-jdbc</include>
         <include>org.apache.camel:camel-jetty-common</include>
@@ -140,6 +143,7 @@
         <include>org.apache.camel:camel-linkedin-api</include>
         <include>org.apache.camel:camel-linkedin</include>
         <include>org.apache.camel:camel-lucene</include>
+        <include>org.apache.camel:camel-lzf</include>
         <include>org.apache.camel:camel-metrics</include>
         <include>org.apache.camel:camel-mail</include>
         <include>org.apache.camel:camel-mina</include>

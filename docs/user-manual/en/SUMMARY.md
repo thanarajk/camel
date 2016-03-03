@@ -3,12 +3,14 @@
 * [Introduction](README.md)
 * [Legal Notice](notice.md)
 * [Getting Started](getting-started.adoc)
+* [Longer Getting Started Guide](book-getting-started.adoc)
 
 * [Architecture](architecture.adoc)
 	* [Endpoint](endpoint.adoc)
 	* [Exchange](exchange.adoc)
 	* [Exchange Pattern](exchange-pattern.adoc)
 	* [Registry](registry.adoc)
+	* [RX](rx.adoc)
 
 <!--
 	* [Dozer Type Conversion](dozer-type-conversion.adoc)
@@ -52,7 +54,6 @@
 	* [Security](.adoc)
 	* [UuidGenerator](.adoc)
 	* [Binding](.adoc)
-	* [RX](.adoc)
 	* [CEP](.adoc)
 	* [BacklogTracer](.adoc)
 	* [Endpoint Annotations](.adoc)
@@ -67,6 +68,11 @@
 	* [Event Message](event-message.adoc)
 	* [Message](message.adoc)
 	* [Request Reply](request-reply.adoc)
+
+* Community
+    * FAQ
+        * Using Camel questions
+            * [How do I configure endpoints](how-do-i-configure-endpoints.adoc)
 
 * Components
 	* [Async Http Client (AHC)](ahc.adoc)
@@ -90,15 +96,51 @@
 		* [AWS SWF](aws-swf.adoc)
 	* [Bam](bam.adoc)
 	* [Barcode](barcode-data-format.adoc)
+	* [Base64](base64.adoc)
+	* [BeanIO](beanio.adoc)
+	* [Beanstalk](beanstalk.adoc)
+	* [Bean-validator](bean-validator.adoc)
+	* [Bindy](bindy.adoc)
+	* [Blueprint](blueprint-testing.adoc)
+	* [Boon](boon.adoc)
+	* [Box](box.adoc)
+	* [Braintree](braintree.adoc)
+	* [Cache](cache.adoc)
+	* [Cassandraql](cassandra.adoc)
+	* [Castor](castor.adoc)
 	* [CDI](cdi.adoc)
+	* [Chunk](chunk.adoc)
+	* [Cmis](cmis.adoc)
+	* [Cometd](cometd.adoc)
+	* [Couchdb](couchdb.adoc)
+	* [Crypto](crypto.adoc)
+		* [Crypto Digital Signatures](crypto-digital-signatures.adoc)
+	* [CSV](csv.adoc)
+	* [Disruptor](disruptor.adoc)
+	* [DNS](dns.adoc)
+	* [Docker](docker.adoc)
+	* [Dozer](dozer.adoc)
+	* [Dropbox](dropbox.adoc)
+	* [Ironmq](ironmq.adoc)
 	* [JMS](jms.adoc)
-	* [Metrics](metrics.adoc) 
+	* [Metrics](metrics.adoc)
+	* [Properties](properties.adoc)
+	* [Quickfix](quickfix.adoc)
+	* [SJMS](sjms.adoc)
+	* [SJMS Batch](sjms-batch.adoc)
+	* [Twitter](twitter.adoc)
+	* [XML Security](xmlsecurity.adoc)
+	* [Yammer](yammer.adoc)
+	* [ZooKeeper](zookeeper.adoc)
 
 <!--
 * [Expession Languages](languages.adoc)
 	* [Bean Language](bean-language.adoc)
 	* [Constant](constant.adoc)
-
-* [Data Formats](data-format.adoc)
 -->
-	
+
+* Data Formats
+    * [XML JSON](xmljson.adoc)
+
+* User Guide
+    * [Karaf](karaf.adoc)

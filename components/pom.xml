@@ -96,6 +96,7 @@
     <module>camel-ejb</module>
     <module>camel-elasticsearch</module>
     <module>camel-elsql</module>
+    <module>camel-etcd</module>
     <module>camel-eventadmin</module>
     <module>camel-exec</module>
     <module>camel-facebook</module>
@@ -113,6 +114,7 @@
     <module>camel-google-mail</module>
     <module>camel-gora</module>
     <module>camel-grape</module>
+    <module>camel-gridfs</module>
     <module>camel-gson</module>
     <module>camel-guava-eventbus</module>
     <module>camel-guice</module>
@@ -128,12 +130,14 @@
     <module>camel-ignite</module>
     <module>camel-infinispan</module>
     <module>camel-irc</module>
+    <module>camel-ironmq</module>
     <module>camel-jackson</module>
     <module>camel-jacksonxml</module>
     <module>camel-javaspace</module>
     <module>camel-jaxb</module>
     <module>camel-jasypt</module>
     <module>camel-jbpm</module>
+    <module>camel-jcache</module>
     <module>camel-jclouds</module>
     <module>camel-jcr</module>
     <module>camel-jdbc</module>
@@ -160,6 +164,7 @@
     <module>camel-leveldb</module>
     <module>camel-linkedin</module>
     <module>camel-lucene</module>
+    <module>camel-lzf</module>
     <module>camel-mail</module>
     <module>camel-metrics</module>
     <module>camel-mina</module>
@@ -276,6 +281,13 @@
             </goals>
             <phase>prepare-package</phase>
          </execution>
+         <execution>
+            <id>readme</id>
+            <goals>
+              <goal>update-readme</goal>
+            </goals>
+            <phase>package</phase>
+          </execution>
         </executions>
       </plugin>
     </plugins>

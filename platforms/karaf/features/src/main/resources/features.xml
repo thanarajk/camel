@@ -227,7 +227,7 @@
   <feature name='camel-braintree' version='${project.version}' resolver='(obr)' start-level='50'>
     <feature version='${project.version}'>camel-core</feature>
      <bundle dependency='true'>mvn:org.apache.commons/commons-lang3/${commons-lang3-version}</bundle>
-     <bundle dependency='true'>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.braintree-java/${braintree-gateway-bundle-version}</bundle>
+     <bundle dependency='true'>mvn:com.braintreepayments.gateway/braintree-java/${braintree-gateway-version}</bundle>
     <bundle>mvn:org.apache.camel/camel-braintree/${project.version}</bundle>
   </feature>
   <feature name='camel-cache' version='${project.version}' resolver='(obr)' start-level='50'>
@@ -265,6 +265,8 @@
   	<!-- you've got to install pax-cdi-weld or pax-cdi-openwebbeans in order to make it works -->
   	<feature version='${pax-cdi-version}'>pax-cdi</feature>
     <feature version='${project.version}'>camel-core</feature>
+    <feature>eventadmin</feature>
+    <bundle>mvn:org.apache.camel/camel-core-osgi/${project.version}</bundle>
     <bundle>mvn:org.apache.camel/camel-cdi/${project.version}</bundle>
   </feature>
   <feature name='camel-chunk' version='${project.version}' resolver='(obr)' start-level='50'>
@@ -300,7 +302,7 @@
   <feature name='camel-couchdb' version='${project.version}' resolver='(obr)' start-level='50'>
     <feature version='${project.version}'>camel-core</feature>
     <bundle dependency='true'>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.lightcouch/${lightcouch-bundle-version}</bundle>
-    <bundle dependency='true'>mvn:com.google.code.gson/gson/${gson-version}</bundle>
+    <bundle dependency='true'>mvn:com.google.code.gson/gson/${lightcouch-gson-version}</bundle>
     <bundle dependency='true'>mvn:commons-codec/commons-codec/${commons-codec-version}</bundle>
     <bundle dependency='true'>mvn:org.apache.httpcomponents/httpcore-osgi/${httpcore4-version}</bundle>
     <bundle dependency='true'>mvn:org.apache.httpcomponents/httpclient-osgi/${httpclient4-version}</bundle>
@@ -412,6 +414,24 @@
     <bundle dependency='true'>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.lucene-sandbox/${lucene-bundle-version}</bundle>
     <bundle dependency='true'>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.elasticsearch/${elasticsearch-bundle-version}</bundle>
     <bundle>mvn:org.apache.camel/camel-elasticsearch/${project.version}</bundle>
+  </feature>
+  <feature name='camel-etcd' version='${project.version}' resolver='(obr)' start-level='50'>
+    <feature version='${project.version}'>camel-core</feature>
+    <bundle dependency='true'>mvn:org.apache.commons/commons-lang3/${commons-lang3-version}</bundle>
+    <bundle dependency='true'>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jzlib/${jzlib-bundle-version}</bundle>
+    <bundle dependency='true'>mvn:com.fasterxml.jackson.core/jackson-core/${jackson2-version}</bundle>
+    <bundle dependency='true'>mvn:com.fasterxml.jackson.core/jackson-annotations/${jackson2-version}</bundle>
+    <bundle dependency='true'>mvn:com.fasterxml.jackson.core/jackson-databind/${jackson2-version}</bundle>
+    <bundle dependency='true'>mvn:com.fasterxml.jackson.module/jackson-module-afterburner/${jackson2-version}</bundle>
+    <bundle dependency='true'>mvn:io.netty/netty-common/${netty41-version}</bundle>
+    <bundle dependency='true'>mvn:io.netty/netty-buffer/${netty41-version}</bundle>
+    <bundle dependency='true'>mvn:io.netty/netty-resolver/${netty41-version}</bundle>
+    <bundle dependency='true'>mvn:io.netty/netty-transport/${netty41-version}</bundle>
+    <bundle dependency='true'>mvn:io.netty/netty-handler/${netty41-version}</bundle>
+    <bundle dependency='true'>mvn:io.netty/netty-codec/${netty41-version}</bundle>
+    <bundle dependency='true'>mvn:io.netty/netty-codec-http/${netty41-version}</bundle>
+    <bundle dependency='true'>mvn:org.mousio/etcd4j/${etcd4j-version}</bundle>
+    <bundle>mvn:org.apache.camel/camel-etcd/${project.version}</bundle>
   </feature>
   <feature name='camel-eventadmin' version='${project.version}' resolver='(obr)' start-level='50'>
     <feature>eventadmin</feature>
@@ -712,6 +732,15 @@
     <bundle>mvn:org.apache.camel/camel-ibatis/${project.version}</bundle>
   </feature>
   <feature name='camel-ignite' version='${project.version}' resolver='(obr)' start-level='50'>
+    <details>
+        <![CDATA[For performance reasons, Apache Ignite requires a JRE with the sun.nio.ch low-level package.
+
+        You need to add this package to the list of packages exported by the system bundle in the etc/jre.properties file.
+
+        Additionally, you must provision the Ignite Karaf features repository in your container: mvn:org.apache.ignite/ignite-osgi-karaf/${ignite-version}.
+        
+        Please refer to the component page (https://camel.apache.org/ignite.html) and to the Ignite docs (https://apacheignite.readme.io/docs/osgi-installation-in-karaf#preparatory-steps) for more information.]]>
+    </details>
     <feature version='${project.version}'>camel-core</feature>
     <feature version='${ignite-version-range}'>ignite-core</feature>
     <bundle>mvn:org.apache.camel/camel-ignite/${project.version}</bundle>
@@ -791,6 +820,11 @@
     <bundle dependency='true'>wrap:mvn:org.kie.remote/kie-services-client/6.1.0.Final</bundle>
     <bundle dependency='true'>wrap:mvn:org.kie.remote/kie-remote-client/${jbpm-version}</bundle>
     <bundle>mvn:org.apache.camel/camel-jbpm/${project.version}</bundle>
+  </feature>
+  <feature name='camel-jcache' version='${project.version}' resolver='(obr)' start-level='50'>
+    <bundle dependency='true'>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.javax-cache-api/${jcache-bundle-version}</bundle>
+    <feature version='${project.version}'>camel-core</feature>
+    <bundle>mvn:org.apache.camel/camel-jcache/${project.version}</bundle>
   </feature>
   <feature name='camel-jclouds' version='${project.version}' resolver='(obr)' start-level='50'>
     <feature version='${jclouds-version}'>jclouds</feature>
@@ -1018,6 +1052,11 @@
     <bundle dependency='true'>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jakarta-regexp/${regexp-bundle-version}</bundle>
     <bundle>mvn:org.apache.camel/camel-lucene/${project.version}</bundle>
   </feature>
+  <feature name='camel-lzf' version='${project.version}' resolver='(obr)' start-level='50'>
+    <bundle dependency='true'>mvn:com.ning/compress-lzf/${compress-lzf-version}</bundle>
+    <feature version='${project.version}'>camel-core</feature>
+    <bundle>mvn:org.apache.camel/camel-lzf/${project.version}</bundle>
+  </feature>
   <feature name='camel-mail' version='${project.version}' resolver='(obr)' start-level='50'>
     <bundle dependency='true'>mvn:com.sun.mail/javax.mail/${javax-mail-version}</bundle>
     <feature version='${project.version}'>camel-core</feature>
@@ -1050,6 +1089,12 @@
     <bundle>mvn:org.apache.camel/camel-mongodb/${project.version}</bundle>
     <feature version='${project.version}'>camel-core</feature>
     <feature version='${project.version}'>camel-jackson</feature>
+  </feature>
+  <feature name='camel-gridfs' version='${project.version}' resolver='(obr)' start-level='50'>
+      <bundle dependency='true'>mvn:org.mongodb/mongo-java-driver/${mongo-java-driver-version}</bundle>
+      <bundle>mvn:org.apache.camel/camel-gridfs/${project.version}</bundle>
+      <feature version='${project.version}'>camel-core</feature>
+      <feature version='${project.version}'>camel-jackson</feature>
   </feature>
   <feature name='camel-mqtt' version='${project.version}' resolver='(obr)' start-level='50'>
     <bundle dependency='true'>mvn:org.fusesource.mqtt-client/mqtt-client/${mqtt-client-version}</bundle>
@@ -1096,7 +1141,7 @@
   </feature>
   <feature name='camel-nats' version='${project.version}' resolver='(obr)' start-level='50'>
     <feature version='${project.version}'>camel-core</feature>
-    <bundle dependency='true'>wrap:mvn:com.github.tyagihas/java_nats/${java-nats-version}</bundle>
+    <bundle dependency='true'>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.java_nats/${java-nats-bundle-version}</bundle>
     <bundle>mvn:org.apache.camel/camel-nats/${project.version}</bundle>
   </feature>
   <feature name='camel-netty' version='${project.version}' resolver='(obr)' start-level='50'>
@@ -1139,7 +1184,7 @@
     <bundle dependency='true'>mvn:org.apache.httpcomponents/httpasyncclient-osgi/${httpasyncclient-version}</bundle>
     <bundle dependency='true'>mvn:commons-codec/commons-codec/${commons-codec-version}</bundle>
     <bundle dependency='true'>mvn:commons-lang/commons-lang/${commons-lang-version}</bundle>
-    <bundle dependency='true'>mvn:com.google.code.gson/gson/${gson-version}</bundle>
+    <bundle dependency='true'>mvn:com.google.code.gson/gson/${olingo2-gson-version}</bundle>
     <bundle dependency='true'>mvn:org.apache.olingo/olingo-odata2-api/${olingo2-version}</bundle>
     <bundle dependency='true'>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.olingo-odata2-core/${olingo-odata2-core-bundle-version}</bundle>
     <bundle dependency='true'>mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.jsr311-api-1.1.1/${servicemix-specs-version}</bundle>
@@ -1225,6 +1270,7 @@
   </feature>
   <feature name='camel-quartz2' version='${project.version}' resolver='(obr)' start-level='50'>
     <bundle dependency='true'>wrap:mvn:com.mchange/c3p0/${c3p0-version}</bundle>
+    <bundle dependency='true'>wrap:mvn:com.mchange/mchange-commons-java/${mchange-commons-java-version}</bundle>
     <bundle dependency='true'>mvn:org.quartz-scheduler/quartz/${quartz2-version}</bundle>
     <feature version='${project.version}'>camel-core</feature>
     <bundle>mvn:org.apache.camel/camel-quartz2/${project.version}</bundle>
